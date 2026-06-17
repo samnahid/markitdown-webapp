@@ -1,5 +1,48 @@
 # MarkItDown
 
+## 🌐 MarkItDown Web Application (PWA & One-Click Launch)
+We have added a modern, fully responsive web application wrap around the MarkItDown library. It features Progressive Web App (PWA) installation, a sleek dark navy glassmorphic layout, raw Markdown / rendered HTML preview tabs, and one-click actions.
+
+### ⚡ One-Click Startup (RunApp.bat)
+To run the web application on Windows:
+1. Double-click the **`RunApp.bat`** file in the root folder of this project.
+2. The launcher will automatically:
+   - Detect and run Python.
+   - Start the local Flask web server.
+   - Open the web app in your default browser at `http://127.0.0.1:5000`.
+   - Provide a network address so you can access the app from your mobile device on the same Wi-Fi network!
+
+### 📱 PWA & Mobile Support
+- **Installable:** You will see a modern **"Install"** button in the header when accessing the site. Click it to install the app on your desktop or mobile phone as a standalone application.
+- **Offline Caching:** Powered by a Service Worker (`sw.js`), the application UI loads instantly even without an internet connection.
+- **Responsive Layout:** Optimized specifically for mobile viewports, including automatic horizontal scrolling for tables/code previews and smart UI adjustments on small screens.
+
+### 🛠️ Manual Web App Setup
+If you prefer starting the server manually or if this is your first time:
+1. Create a virtual environment and install the required dependencies:
+   ```bash
+   python -m venv venv
+   
+   # Windows (Activate virtual environment)
+   venv\Scripts\activate
+   
+   # Install Flask app requirements
+   pip install -r webapp/requirements.txt
+   
+   # Install local MarkItDown package
+   pip install -e packages/markitdown[all]
+   ```
+2. Run the application:
+   ```bash
+   python webapp/app.py
+   ```
+
+### 🎨 Credits
+**Design and Developed by:** [Shamim Ahmed Nahid](https://samnahid21.web.app/)
+( click to redirect: https://samnahid21.web.app/ )
+
+---
+
 [![PyPI](https://img.shields.io/pypi/v/markitdown.svg)](https://pypi.org/project/markitdown/)
 ![PyPI - Downloads](https://img.shields.io/pypi/dd/markitdown)
 [![Built by AutoGen Team](https://img.shields.io/badge/Built%20by-AutoGen%20Team-blue)](https://github.com/microsoft/autogen)

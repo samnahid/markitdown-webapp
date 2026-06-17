@@ -1,0 +1,25 @@
+{
+  "_comment": "MarkItDown PWA Manifest Configuration — Shamim Ahmed Nahid (https://samnahid21.web.app/)",
+  "name": "MarkItDown Converter",
+  "short_name": "MarkItDown",
+  "description": "Microsoft MarkItDown Web Wrapper — LLM-এর জন্য Markdown কনভার্টার",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

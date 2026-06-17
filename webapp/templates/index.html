@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarkItDown Web Application — LLM-এর জন্য Markdown কনভার্টার</title>
+    
+    <!-- Google Fonts: Inter ফন্ট ইম্পোর্ট করছি সুন্দর টেক্সট লুকের জন্য -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons: আধুনিক এবং প্রিমিয়াম আইকন সেট লোড করছি -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    
+    <!-- Marked.js: জাভাস্ক্রিপ্ট দিয়ে মার্কডাউনকে ভিজ্যুয়াল HTML-এ রূপান্তর করার লাইব্রেরি -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- PWA এবং মোবাইল মেটা ট্যাগসমূহ -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MarkItDown">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/favicon.png') }}">
+    
+    <!-- কাস্টম প্রিমিয়াম স্টাইলশীট লিংক করছি -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- ----------------------------------------------------
+           ১. হেডার সেকশন (Header Section)
+        ---------------------------------------------------- -->
+        <header>
+            <div class="logo">
+                <!-- Lucide ফাইল আইকন ব্যবহার করছি লোগোতে -->
+                <i data-lucide="file-type-2" class="w-6 h-6" style="stroke: var(--accent-primary);"></i>
+                <span>MarkItDown Converter</span>
+            </div>
+            
+            <!-- হেডার অ্যাকশন বাটন গ্রুপ -->
+            <div class="header-actions">
+                <!-- PWA ইন্সটল বাটন (ডিফল্টভাবে লুকানো থাকবে, ব্রাউজার সাপোর্ট করলে শো হবে) -->
+                <button id="install-btn" class="install-btn hidden" title="অ্যাপটি ইন্সটল করুন">
+                    <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                    <span>ইন্সটল করুন</span>
+                </button>
+                
+                <!-- থিম টগলার বাটন (ডার্ক/লাইট থিম) -->
+                <button id="theme-toggle" class="theme-toggle" title="থিম পরিবর্তন করুন">
+                    <i data-lucide="sun" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ----------------------------------------------------
+           ২. প্রধান কনটেন্ট এরিয়া (Main Grid Layout)
+        ---------------------------------------------------- -->
+        <div class="app-grid">
+            
+            <!-- বাম কলাম: ফাইল ড্র্যাগ এবং আপলোড কন্ট্রোল -->
+            <div class="left-panel">
+                <div class="glass-card">
+                    <h2 class="upload-title">ফাইল নির্বাচন করুন</h2>
+                    <p class="upload-subtitle">যেকোনো ডকুমেন্ট টেনে আনুন বা ব্রাউজ করুন</p>
+                    
+                    <!-- ফাইল ড্র্যাগ ও ড্রপ এরিয়া -->
+                    <div id="drag-zone" class="drag-zone">
+                        <i data-lucide="cloud-upload" class="upload-icon"></i>
+                        <div class="drag-text">আপনার ফাইলটি এখানে ড্র্যাগ অ্যান্ড ড্রপ করুন</div>
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">অথবা</span>
+                        <button class="browse-btn" type="button">পিসি থেকে খুঁজুন</button>
+                        
+                        <!-- আসল ফাইল ইনপুটটি হিডেন থাকবে -->
+                        <input type="file" id="file-input" name="file" accept=".pdf,.docx,.pptx,.xlsx,.xls,.jpg,.jpeg,.png,.wav,.mp3,.json,.xml,.csv,.epub,.zip">
+                    </div>
+                    
+                    <!-- সিলেক্টেড ফাইল কার্ড (ডিফল্টভাবে লুকানো থাকে) -->
+                    <div id="selected-file-container" class="selected-file-container hidden">
+                        <div class="file-info">
+                            <i data-lucide="file-text" class="file-icon"></i>
+                            <div>
+                                <div id="selected-file-name" class="file-name">filename.pdf</div>
+                                <div id="selected-file-size" class="file-size">0 KB</div>
+                            </div>
+                        </div>
+                        <button id="remove-file" class="remove-file" title="ফাইল রিমুভ করুন">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- ফাইল প্রসেস বা রূপান্তর করার বাটন -->
+                    <button id="convert-btn" class="action-btn" disabled>
+                        <i data-lucide="wand-2"></i>
+                        <span>Markdown-এ রূপান্তর করুন</span>
+                    </button>
+                    
+                    <!-- সাপোর্টেড ফরম্যাট উইজেট -->
+                    <div class="formats-widget">
+                        <h3 class="widget-title">সাপোর্টেড ফরম্যাটসমূহ</h3>
+                        <div class="format-pills">
+                            <span class="pill">PDF</span>
+                            <span class="pill">Word (DOCX)</span>
+                            <span class="pill">Excel (XLSX)</span>
+                            <span class="pill">PowerPoint (PPTX)</span>
+                            <span class="pill">ছবি (OCR)</span>
+                            <span class="pill">অডিও (Transcription)</span>
+                            <span class="pill">CSV / JSON / XML</span>
+                            <span class="pill">ZIP / EPub</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ডান কলাম: রূপান্তরকৃত আউটপুট ভিউয়ার -->
+            <div class="right-panel">
+                <div class="glass-card" style="height: 100%; display: flex; flex-direction: column;">
+                    
+                    <!-- ট্যাব এবং অ্যাকশন কন্ট্রোল হেডার -->
+                    <div class="result-header">
+                        <div class="tabs">
+                            <button id="tab-code" class="tab-btn active">Markdown কোড</button>
+                            <button id="tab-preview" class="tab-btn">ভিজ্যুয়াল প্রিভিউ</button>
+                        </div>
+                        <div class="action-group">
+                            <button id="copy-btn" class="icon-btn primary">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                                <span>কপি করুন</span>
+                            </button>
+                            <button id="download-btn" class="icon-btn">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>ডাউনলোড (.md)</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- ৩টি প্রধান ডাইনামিক স্টেট (Empty / Loading / Output) -->
+                    
+                    <!-- স্টেট ১: কোনো ফাইল প্রসেস না করা অবস্থায় স্বাগত স্ক্রিন -->
+                    <div id="empty-state" class="empty-state">
+                        <i data-lucide="file-code" class="empty-icon"></i>
+                        <h3 class="empty-title">কোনো ফাইল রূপান্তর করা হয়নি</h3>
+                        <p class="empty-desc">বাম পাশ থেকে একটি ফাইল নির্বাচন করে "Markdown-এ রূপান্তর করুন" বাটনে ক্লিক করুন।</p>
+                    </div>
+                    
+                    <!-- স্টেট ২: কনভার্ট হওয়ার সময় লোডিং স্ক্রিন -->
+                    <div id="loading-state" class="empty-state hidden">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <h3 class="empty-title">ফাইল প্রসেস করা হচ্ছে...</h3>
+                            <p class="empty-desc">MarkItDown আপনার ফাইলটি বিশ্লেষণ করে টেমপ্লেট ও টেবিলগুলো সাজিয়ে তুলছে। অনুগ্রহ করে অপেক্ষা করুন।</p>
+                            <div class="loader-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- স্টেট ৩: রূপান্তর সফল হওয়ার পর কনটেন্ট এরিয়া -->
+                    <div id="output-state" class="output-state hidden" style="flex: 1;">
+                        <!-- মার্কডাউন কোড ভিউ (Raw textarea) -->
+                        <textarea id="output-textarea" class="output-textarea" readonly placeholder="# রূপান্তর করা ফাইল এখানে দেখাবে..."></textarea>
+                        
+                        <!-- ভিজ্যুয়াল প্রিভিউ ভিউ (Rendered HTML) -->
+                        <div id="preview-box" class="preview-box hidden"></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- ----------------------------------------------------
+           ৩. ফুটার এবং ক্রেডিট সেকশন (Footer with Credits)
+        ---------------------------------------------------- -->
+        <footer>
+            <div>Microsoft MarkItDown Web Wrapper — Open Source Utility</div>
+            <div class="credits">
+                Design and Developed by 
+                <a href="https://samnahid21.web.app/" target="_blank" rel="noopener noreferrer" class="credits-link">
+                    Shamim Ahmed Nahid
+                </a> 
+                ( click to redirect <a href="https://samnahid21.web.app/" target="_blank" rel="noopener noreferrer" class="credits-link">https://samnahid21.web.app/</a> )
+            </div>
+        </footer>
+    </div>
+
+    <!-- Lucide আইকন লাইব্রেরি সক্রিয় করা -->
+    <script>
+        lucide.createIcons();
+    </script>
+    
+    <!-- কাস্টম জাভাস্ক্রিপ্ট লজিক ফাইল লিংক করা -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
