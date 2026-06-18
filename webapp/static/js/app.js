@@ -205,6 +205,106 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ----------------------------------------------------
+    // ৬.১. AI অ্যাসিস্ট্যান্ট লজিক (AI Assistant Logic)
+    // ----------------------------------------------------
+    const aiPromptInput = document.getElementById('ai-prompt-input');
+    const aiSubmitBtn = document.getElementById('ai-submit-btn');
+    const aiSummaryBtn = document.getElementById('ai-summary-btn');
+    const aiTranslateBtn = document.getElementById('ai-translate-btn');
+    const aiCorrectBtn = document.getElementById('ai-correct-btn');
+    const aiLoading = document.getElementById('ai-loading');
+
+    // এপিআই কল করার কমন ফাংশন
+    async function callAIProcess(action, promptText = '') {
+        const markdownText = outputTextarea.value;
+        if (!markdownText) {
+            showToast('প্রসেস করার জন্য আগে একটি ফাইল রূপান্তর করুন!', 'error');
+            return;
+        }
+
+        // লোডিং স্টেট সেট করা
+        setAILoadingState(true);
+
+        try {
+            const response = await fetch('/ai_process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    markdown: markdownText,
+                    prompt: promptText,
+                    action: action
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // ফাইল আপডেট করা
+                outputTextarea.value = data.result;
+                
+                // প্রিভিউ বক্স আপডেট করা
+                if (typeof marked !== 'undefined') {
+                    previewBox.innerHTML = marked.parse(data.result);
+                } else {
+                    previewBox.innerHTML = `<pre>${data.result}</pre>`;
+                }
+
+                showToast('AI ফাইল প্রসেসিং সফল হয়েছে!', 'success');
+                // কাস্টম ইনপুট রিসেট করা
+                if (action === 'custom') {
+                    aiPromptInput.value = '';
+                }
+            } else {
+                throw new Error(data.error || 'AI প্রসেস করতে ব্যর্থ হয়েছে।');
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            setAILoadingState(false);
+        }
+    }
+
+    // বাটনগুলো সক্রিয় বা নিষ্ক্রিয় এবং লোডিং স্পিনার টগল করার ফাংশন
+    function setAILoadingState(isLoading) {
+        if (isLoading) {
+            aiLoading.classList.remove('hidden');
+            aiSubmitBtn.setAttribute('disabled', 'true');
+            aiSummaryBtn.setAttribute('disabled', 'true');
+            aiTranslateBtn.setAttribute('disabled', 'true');
+            aiCorrectBtn.setAttribute('disabled', 'true');
+        } else {
+            aiLoading.classList.add('hidden');
+            aiSubmitBtn.removeAttribute('disabled');
+            aiSummaryBtn.removeAttribute('disabled');
+            aiTranslateBtn.removeAttribute('disabled');
+            aiCorrectBtn.removeAttribute('disabled');
+        }
+    }
+
+    // বাটন ইভেন্ট হ্যান্ডলার সেট করা
+    aiSubmitBtn.addEventListener('click', () => {
+        const prompt = aiPromptInput.value.trim();
+        if (!prompt) {
+            showToast('দয়া করে আপনার নির্দেশনা লিখুন!', 'error');
+            return;
+        }
+        callAIProcess('custom', prompt);
+    });
+
+    aiSummaryBtn.addEventListener('click', () => callAIProcess('summarize'));
+    aiTranslateBtn.addEventListener('click', () => callAIProcess('translate'));
+    aiCorrectBtn.addEventListener('click', () => callAIProcess('correct'));
+
+    // ইনপুট বক্সে Enter চাপলে যেন প্রসেস হয়
+    aiPromptInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            aiSubmitBtn.click();
+        }
+    });
+
+    // ----------------------------------------------------
     // ৭. অ্যাকশন বাটনসমূহ (Copy & Download Functionality)
     // ----------------------------------------------------
     

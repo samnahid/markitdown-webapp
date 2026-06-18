@@ -2,6 +2,8 @@ import os
 import sys
 import shutil
 import tempfile
+import requests
+import json
 from flask import Flask, request, jsonify, render_template
 
 # we append the local packages/markitdown/src path to ensure the local version of markitdown is importable 
@@ -94,6 +96,77 @@ def convert_file():
         except Exception as cleanup_error:
             # Log cleanup errors to console silently
             print(f"Error cleaning up temp files: {cleanup_error}")
+
+@app.route('/ai_process', methods=['POST'])
+def ai_process():
+    """Gemma-4-31B মডেলের মাধ্যমে ফাইল প্রসেস, সামারাইজ বা কাস্টম প্রম্পটের সাহায্যে পরিবর্তন করার এন্ডপয়েন্ট"""
+    data = request.json or {}
+    markdown_content = data.get('markdown', '')
+    user_prompt = data.get('prompt', '')
+    action = data.get('action', 'custom')
+    
+    if not markdown_content:
+        return jsonify({
+            'success': False,
+            'error': 'প্রসেস করার জন্য কোনো টেক্সট বা ফাইল কনটেন্ট পাওয়া যায়নি।'
+        }), 400
+
+    # ইউজারের অ্যাকশন অনুযায়ী উপযুক্ত প্রম্পট তৈরি করা
+    if action == 'summarize':
+        system_instruction = "তুমি একজন দক্ষ ফাইল রিডার এবং সামারাইজার। নিচের ফাইলটির একটি সুন্দর, তথ্যবহুল এবং সংক্ষিপ্ত সারসংক্ষেপ তৈরি করো সহজ বাংলায়।"
+        prompt_content = f"{system_instruction}\n\nফাইলের কনটেন্ট:\n{markdown_content}"
+    elif action == 'translate':
+        system_instruction = "তুমি একজন প্রফেশনাল অনুবাদক। নিচের সম্পূর্ণ ফাইলটি সহজ এবং প্রাঞ্জল বাংলায় অনুবাদ করো।"
+        prompt_content = f"{system_instruction}\n\nফাইলের কনটেন্ট:\n{markdown_content}"
+    elif action == 'correct':
+        system_instruction = "তুমি একজন বাংলা ভাষার ব্যাকরণবিদ। নিচের লেখার বানান, ব্যাকরণ এবং বাক্য গঠন ঠিক করো। কোনো তথ্য বা প্যারা বাদ না দিয়ে শুধু ত্রুটিগুলো সংশোধন করো।"
+        prompt_content = f"{system_instruction}\n\nফাইলের কনটেন্ট:\n{markdown_content}"
+    else:
+        # কাস্টম নির্দেশনা
+        system_instruction = "তুমি একজন ফাইল এডিটর। ব্যবহারকারীর নির্দেশ অনুযায়ী ফাইলের কন্টেন্ট সংশোধন বা পরিবর্তন করো। শুধুমাত্র পরিবর্তিত কনটেন্ট আউটপুট হিসেবে প্রদান করো।"
+        prompt_content = f"ব্যবহারকারীর নির্দেশ: {user_prompt}\n\nফাইলের মূল কনটেন্ট:\n{markdown_content}"
+
+    # Groq API এর মাধ্যমে Llama 3.3 কল করা
+    api_key = os.environ.get("GROQ_API_KEY", "")
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    
+    payload = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [
+            {
+                "role": "user",
+                "content": prompt_content
+            }
+        ]
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload))
+        response_data = response.json()
+        
+        if 'error' in response_data:
+            return jsonify({
+                'success': False,
+                'error': response_data['error'].get('message', 'Groq API Error occurred')
+            }), 500
+            
+        choice = response_data['choices'][0]['message']
+        result_text = choice.get('content', '')
+        
+        return jsonify({
+            'success': True,
+            'result': result_text
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'AI প্রসেস করতে ত্রুটি হয়েছে: {str(e)}'
+        }), 500
+
 if __name__ == '__main__':
     # Run server on port 5000 and listen to all incoming network interfaces
     app.run(debug=True, host='0.0.0.0', port=5000)

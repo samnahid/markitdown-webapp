@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarkItDown Web Application — LLM-এর জন্য Markdown কনভার্টার</title>
     
-    <!-- Google Fonts: Inter ফন্ট ইম্পোর্ট করছি সুন্দর টেক্সট লুকের জন্য -->
+    <!-- Google Fonts: Inter এবং Hind Siliguri ফন্ট ইম্পোর্ট করছি সুন্দর টেক্সট লুকের জন্য -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     
     <!-- Lucide Icons: আধুনিক এবং প্রিমিয়াম আইকন সেট লোড করছি -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -156,12 +156,53 @@
                     </div>
                     
                     <!-- স্টেট ৩: রূপান্তর সফল হওয়ার পর কনটেন্ট এরিয়া -->
-                    <div id="output-state" class="output-state hidden" style="flex: 1;">
+                    <div id="output-state" class="output-state hidden" style="flex: 1; display: flex; flex-direction: column; gap: 1.5rem;">
                         <!-- মার্কডাউন কোড ভিউ (Raw textarea) -->
-                        <textarea id="output-textarea" class="output-textarea" readonly placeholder="# রূপান্তর করা ফাইল এখানে দেখাবে..."></textarea>
+                        <textarea id="output-textarea" class="output-textarea" placeholder="# রূপান্তর করা ফাইল এখানে দেখাবে..."></textarea>
                         
                         <!-- ভিজ্যুয়াল প্রিভিউ ভিউ (Rendered HTML) -->
                         <div id="preview-box" class="preview-box hidden"></div>
+
+                        <!-- ----------------------------------------------------
+                           ৪. AI অ্যাসিস্ট্যান্ট সেকশন (AI Assistant Section)
+                        ---------------------------------------------------- -->
+                        <div class="ai-section">
+                            <div class="ai-header">
+                                <i data-lucide="sparkles" class="w-5 h-5" style="color: var(--accent-primary);"></i>
+                                <span>Llama-3.3-70B AI অ্যাসিস্ট্যান্ট (Groq)</span>
+                            </div>
+                            
+                            <!-- AI কাস্টম প্রম্পট ইনপুট ও বাটন -->
+                            <div class="ai-input-group">
+                                <input type="text" id="ai-prompt-input" placeholder="যেমন: ফাইল থেকে গুরুত্বপূর্ণ পয়েন্টগুলো বুলেট আকারে লিখুন...">
+                                <button id="ai-submit-btn" class="ai-btn primary" title="প্রসেস করুন">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                    <span>প্রসেস করুন</span>
+                                </button>
+                            </div>
+                            
+                            <!-- কুইক অ্যাকশন বাটনসমূহ -->
+                            <div class="ai-quick-actions">
+                                <button id="ai-summary-btn" class="ai-quick-btn">
+                                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                                    <span>সারসংক্ষেপ করুন</span>
+                                </button>
+                                <button id="ai-translate-btn" class="ai-quick-btn">
+                                    <i data-lucide="languages" class="w-4 h-4"></i>
+                                    <span>সহজ বাংলায় অনুবাদ</span>
+                                </button>
+                                <button id="ai-correct-btn" class="ai-quick-btn">
+                                    <i data-lucide="spell-check" class="w-4 h-4"></i>
+                                    <span>বানান ও ব্যাকরণ ঠিক করুন</span>
+                                </button>
+                            </div>
+
+                            <!-- AI লোডিং ওভারলে/স্ট্যাটাস -->
+                            <div id="ai-loading" class="ai-loading hidden">
+                                <div class="spinner-small"></div>
+                                <span>AI ফাইলটি প্রসেস করছে... অনুগ্রহ করে অপেক্ষা করুন।</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -174,11 +215,8 @@
         <footer>
             <div>Microsoft MarkItDown Web Wrapper — Open Source Utility</div>
             <div class="credits">
-                Design and Developed by 
-                <a href="https://samnahid21.web.app/" target="_blank" rel="noopener noreferrer" class="credits-link">
-                    Shamim Ahmed Nahid
-                </a> 
-                ( click to redirect <a href="https://samnahid21.web.app/" target="_blank" rel="noopener noreferrer" class="credits-link">https://samnahid21.web.app/</a> )
+                <!-- User Rule অনুযায়ী ক্রেডিট লিংক প্রদর্শন করা হচ্ছে -->
+                <a href="https://samnahid21.web.app/" target="_blank" rel="noopener noreferrer" class="credits-link">Design and Developed by Shamim Ahmed Nahid</a>
             </div>
         </footer>
     </div>
